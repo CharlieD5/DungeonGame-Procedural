@@ -846,7 +846,7 @@ MonoBehaviour:
   currentHealthText: {fileID: 459682899}
   currentManaText: {fileID: 821185151}
   gameOverText: {fileID: 1691958451}
-  isSpearThrow: 0
+  isPlayerDead: 0
   isInLineOfSight: 0
   turn: 0
 --- !u!4 &842569760
@@ -2145,6 +2145,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 525339234, guid: 6f1081cacb9073142983df69c0912320, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -1.71
+      objectReference: {fileID: 0}
     - target: {fileID: 1659157749937031648, guid: 6f1081cacb9073142983df69c0912320,
         type: 3}
       propertyPath: m_Name

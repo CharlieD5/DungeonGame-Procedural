@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public enum UnitDir { North, East, South, West };
-public enum Turn { PLAYER, ENEMY };
+public enum Turn { PLAYER, ENEMY, NONE };
 
 public class GameController : MonoBehaviour
 {
@@ -84,51 +84,50 @@ public class GameController : MonoBehaviour
     {
         if (waitForBoradGen)
         {
-            if (player != null)
+            // Player turn
+            if (turn == Turn.PLAYER && player.health > 0)
             {
-                // Player turn
-                if (turn == Turn.PLAYER)
-                {
-                    playerOptions.SetActive(true);
+                playerOptions.SetActive(true);
 
-                    bool turnTaken = player.GetComponent<PlayerController>().PerformTurn(this);
+                bool turnTaken = player.GetComponent<PlayerController>().PerformTurn(this);
 
-                    if (Input.GetKeyDown(KeyCode.Alpha1))
-                        CheatCodeOne();
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                    CheatCodeOne();
 
-                    if (Input.GetKeyDown(KeyCode.Alpha2))
-                        CheatCodeTwo(player.tile.room);
+                if (Input.GetKeyDown(KeyCode.Alpha2))
+                    CheatCodeTwo(player.tile.room);
 
-                    if (turnTaken)
-                        turn = Turn.ENEMY;
-                }
-                else
-                {
-                    playerOptions.SetActive(false);
-
-                    // Enemy turn
-                    foreach (Unit unit in player.tile.room.units)
-                    {
-                        if (unit == null)
-                            continue;
-
-                        if (unit.health > 0 && !unit.wasPushed)
-                            StartCoroutine(DelayEnemyTurns(unit, 0.5f));
-
-                        unit.wasPushed = false;
-                    }
-                    turn = Turn.PLAYER;
-                }
-                
-                if (player.health <= 0 && isPlayerDead != true)
-                {
-                    GameOver(false);
-                    StartCoroutine(Death(player, 0.5f));
-                    StartCoroutine(DelayEnd(1));
-                    turn = Turn.ENEMY;
-                    isPlayerDead = true;
-                }
+                if (turnTaken)
+                    StartCoroutine(SwitchTurns(player, 0.25f));
             }
+            else if (turn == Turn.ENEMY)
+            {
+                playerOptions.SetActive(false);
+
+                // Enemy turn
+                foreach (Unit unit in player.tile.room.units)
+                {
+                    if (unit == null)
+                        continue;
+
+                    if (unit.health > 0 && !unit.wasPushed)
+                        //StartCoroutine(DelayEnemyTurns(unit, 0.5f));
+                        StartCoroutine(SwitchTurns(unit, 0.25f));
+
+                    unit.wasPushed = false;
+                }
+                turn = Turn.PLAYER;
+            }
+
+            if (player.health <= 0 && isPlayerDead != true)
+            {
+                GameOver(false);
+                //StartCoroutine(Death(player, 0.5f));
+                StartCoroutine(DelayEnd(1));
+               // turn = Turn.;
+                isPlayerDead = true;
+            }
+
         }
     }
 
@@ -168,7 +167,6 @@ public class GameController : MonoBehaviour
                 min.y = roomPos.y;
             else if (roomPos.y > max.y)
                 max.y = roomPos.y;
-
         }
 
 
@@ -176,7 +174,7 @@ public class GameController : MonoBehaviour
         Vector3 camPos = board.BoardToWorld(center) + Vector3.up * 10f;
 
         // cam.transform.position = camPos;
-        StartCoroutine(MoveTo(cam.transform, camPos, 0.5f));
+        StartCoroutine(MoveTo(cam.transform, camPos, 0.25f));
     }
 
     public bool CanMoveTo(Unit unit, Tile tile)
@@ -399,7 +397,7 @@ public class GameController : MonoBehaviour
     }
 
     #endregion
-    
+
     #region Spawn Enemies, Upgrades
 
     public void Spawn(Room room)
@@ -497,7 +495,7 @@ public class GameController : MonoBehaviour
             StartCoroutine(DestroyObject(arrow, .5f));
             arrow = null;
         }
-        
+
     }
 
     void DisplayUpgradeMachine(List<Upgrade> upgrades)
@@ -622,7 +620,7 @@ public class GameController : MonoBehaviour
 
     IEnumerator Death(Unit unit, float delay)
     {
-        if (player != null)
+        if (unit != null)
         {
             yield return new WaitForSeconds(delay);
             unit.tile.unit = null;
@@ -647,10 +645,10 @@ public class GameController : MonoBehaviour
                 unit.health--;
                 StartCoroutine(DamageAnimation(unit, .25f));
 
-                //if (unit.health <= 0)
-                //{
-                //    StartCoroutine(Death(unit, .35f));
-                //}
+                if (unit.health <= 0)
+                {
+                    StartCoroutine(Death(unit, .35f));
+                }
                 if (unit is PlayerUnit && unit != null)
                     currentHealthText.text = "HP: " + player.health.ToString() + "/" + player.maxHealth.ToString();
             }
@@ -687,6 +685,22 @@ public class GameController : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         unit.GetComponent<UnitController>().PerformTurn(this);
+    }
+
+    IEnumerator SwitchTurns(Unit unit, float delay)
+    {
+        turn = Turn.NONE;
+        if (unit is PlayerUnit)
+        {
+            yield return new WaitForSeconds(delay);
+            unit.GetComponent<UnitController>().PerformTurn(this);
+            turn = Turn.ENEMY;
+        }
+        else
+        {
+            yield return new WaitForSeconds(delay);
+            unit.GetComponent<UnitController>().PerformTurn(this);
+        }
     }
 
     #endregion
