@@ -16,4 +16,22 @@ public class Room : MonoBehaviour
     // list of the doors in the room
     public List<Door> doors = new List<Door>();
 
+    // list of units in the room
+    public List<Unit> units = null;
+
+    // depth level
+    public int depth;
+
+    // 
+    public Tile GetTileAt(Vector2Int roomPosition)
+    {
+        foreach (Tile tile in tiles)
+        {
+            if (tile.roomPosition == roomPosition)
+            {
+                return tile;
+            }
+        }
+        return null; 
+    }
 }

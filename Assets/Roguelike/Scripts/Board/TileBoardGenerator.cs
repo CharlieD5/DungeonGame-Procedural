@@ -32,6 +32,7 @@ public class TileBoardGenerator : MonoBehaviour
     [Header("UI & Textures")]
 
     public Text seedText;
+   
     public Material m_VictoryFloor, m_VictoryWall;
 
     [Header("Etc.")]
@@ -54,11 +55,12 @@ public class TileBoardGenerator : MonoBehaviour
     {
         SortRoomsViaExits();
         // probably should be called on loading screen rather than start
-        Generate();
+       // Generate();
     }
 
-    public void Generate()
+    public TileBoard Generate()
     {
+        
         Random.InitState(seed);
         seedText.text = "Seed: " + seed.ToString();
         // create new tile board
@@ -69,11 +71,14 @@ public class TileBoardGenerator : MonoBehaviour
         int roomIndex = 0;
         string strRoom = roomAssets[roomIndex].text;    // start room assigned
         Room startRoom = CreateRoomFromString(strRoom, Vector2Int.zero);
+        startRoom.depth = 0;
 
         // for each unconnected door in the start room, recursively create a new room
 
         GenerateConnectedRooms(startRoom, 0);
         RemoveUnconnectedDoors();
+
+        return board;
     }
 
 
@@ -159,12 +164,8 @@ public class TileBoardGenerator : MonoBehaviour
     // what room and depth
     private void GenerateConnectedRooms(Room room, int depth)
     {
-        if (depth == 9 || depth == 8)
-        {
-            int i = 0;
-        }
         List<Room> roomList = new List<Room>();
-
+        int curDepth = depth + 1;
         //list of added rooms
         foreach (Door door in room.doors)
         {
@@ -199,7 +200,7 @@ public class TileBoardGenerator : MonoBehaviour
                     mConnectedDoor.connectedDoor = door;
 
                     roomList.Add(AddedRoom);
-
+                    AddedRoom.depth = curDepth;
                     break;
                 }  
                 else
@@ -212,7 +213,7 @@ public class TileBoardGenerator : MonoBehaviour
                 }
             }
         }
-
+        
         //added rooms
         if (depth + 1 < victoryDepth)
         {
@@ -221,9 +222,10 @@ public class TileBoardGenerator : MonoBehaviour
                 GenerateConnectedRooms(addedRoom, depth + 1);
             }
         }
-        // TO DO: else, set victory room to look like victory room
+        // else, set victory room to look like victory room
         else
         {
+            
             foreach (Room addedRoom in roomList)
             {
                 foreach (Tile tile in addedRoom.tiles)
